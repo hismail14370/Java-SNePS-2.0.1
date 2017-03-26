@@ -937,7 +937,7 @@ public class Network {
 		Pattern p = new Pattern(patName, dCableSet);
 		String semantic = getCFSignature(turnIntoHashtable(relNodeSet),
 				caseFrame);
-		Class sem = Class.forName("sneps.SemanticClasses." + semantic);
+		Class sem = Class.forName("sneps.network.classes.semantic." + semantic);
 		Entity e = (Entity) sem.newInstance();
 		// builds a proposition node if the semantic class is proposition, and
 		// pattern node otherwise
@@ -1006,7 +1006,7 @@ public class Network {
 		Closed c = new Closed(closedName, dCableSet);
 		String semantic = getCFSignature(turnIntoHashtable(relNodeSet),
 				caseFrame);
-		Class sem = Class.forName("sneps.SemanticClasses." + semantic);
+		Class sem = Class.forName("sneps.network.classes.semantic." + semantic);
 		Entity e = (Entity) sem.newInstance();
 		// builds a proposition node if the semantic class is proposition, and
 		// closed node otherwise
@@ -1237,7 +1237,7 @@ public class Network {
 	 *             if the semantic class cannot be successfully built.
 	 */
 	public Entity buildSemanticClass(String name) throws Exception {
-		Class<?> sem = Class.forName("sneps.SemanticClasses." + name);
+		Class<?> sem = Class.forName("sneps.network.classes.semantic." + name);
 		Entity e = (Entity) sem.newInstance();
 		return e;
 	}
