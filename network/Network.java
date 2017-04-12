@@ -806,17 +806,15 @@ public class Network {
 			
 			}  
 		     
-			if(newFlags[i]==true){  
-				System.out.println("jjj");
+			
 			temp[counter][0] = new FUnitPath((Relation) array[i][0]);
 			ns1.addNode((Node) array[i][1]); 
 			temp[counter][1] = ns1;
 			counter++; 
-			}
+			
 			
 		}
 
-		System.out.println(Arrays.deepToString(temp));
 		LinkedList<Object[]> ns = find(temp, new Context());
 	
 		
@@ -2192,7 +2190,7 @@ public class Network {
 	     Wire w1 = new Wire(member, "Mary","Base","Entity");  
 	     Wire w2 = new Wire(member, "young", "Base","Entity"); 
 	     Wire w3 = new Wire(quant); 
-	     Wire w4 = new Wire(quant);
+	     Wire w4 = new Wire(cl);
 	     Wire w5 = new Wire(quant, w3.getWireNode());
 	     Wire w6 = new Wire(cl, w3.getWireNode()); 
 	     Wire w7 = new Wire(quant, w4.getWireNode());
@@ -2202,21 +2200,17 @@ public class Network {
 	     Wire w11 = new Wire(member,w3.getWireNode());
 	             
 	     ArrayList<Wire> m1Wires = new ArrayList<Wire>(); 
-	     m1Wires.add(w1);
-	     m1Wires.add(w6);  
-	     m1Wires.add(w3); 
+
 	    
-	    // m1Wires.add(w1); 
-//	     m1Wires.add(w2);  
-//	     m1Wires.add(w4); 
+	     m1Wires.add(w1); 
+	     m1Wires.add(w2);  
+	     m1Wires.add(w3); 
 	    	
 	     ArrayList<Wire> m2Wires = new ArrayList<Wire>();  
-	     m2Wires.add(w1);
-	     m2Wires.add(w8);    
-		 m2Wires.add(w7); 
-		
-	    // m2Wires.add(w4);  
-	    // m2Wires.add(w2);   
+	  
+	    m2Wires.add(w1);  
+	    m2Wires.add(w2);   
+	    m2Wires.add(w4);
 
       	       
 	     MolecularNode m1 = Network.buildMolecularNode(m1Wires, cf);   
