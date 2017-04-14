@@ -1,4 +1,4 @@
-package sneps.snip.ilp;
+package sneps.snip.ilp.antiUnification;
 
 import java.util.*;
 
