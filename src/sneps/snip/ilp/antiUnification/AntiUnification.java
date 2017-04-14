@@ -12,7 +12,7 @@ import sneps.network.nodes.NodeSet;
 import sneps.network.nodes.VariableNode;
 import sneps.network.classes.semantic.*;
 
-public class InductiveEngine {
+public class AntiUnification {
 	
 	private static GeneralizationMap gMap = new GeneralizationMap();
 	
