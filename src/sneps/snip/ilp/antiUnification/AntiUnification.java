@@ -30,43 +30,40 @@ public class AntiUnification {
 		NodeSet cloneB = new NodeSet();
 		cloneA.addAll(a);
 		cloneB.addAll(b);
-		for (int i = 0; i < cloneA.size(); i++){
+		main : for (int i = 0; i < cloneA.size(); i++){
 			Node na = cloneA.getNode(i);
-			if (na.getSyntacticType().equals("Base")){
-				for (int j = 0; j < cloneB.size(); j++){
-					Node nb = cloneB.getNode(j);
-					if (nb.getSyntacticType().equals("Base")){
-						if (nb.getIdentifier().equals(na.getIdentifier())){
+			if(na.getSyntacticType().equals("Variable")){
+				System.out.println("DIRECT PASS: "+na.getIdentifier());
+				resultSet.addNode(na);
+				continue main;
+			}
+			else{
+				if(na.getSyntacticType().equals("Base")){
+					for (int j = 0; j < cloneB.size(); j++){
+						Node nb = cloneB.getNode(j);
+						System.out.println(na.getIdentifier()+" <-> "+nb.getIdentifier());
+						if(na.getIdentifier().equals(nb.getIdentifier())){
+							System.out.println("MATCH!");
 							resultSet.addNode(na);
-							cloneA.removeNode(na);
-							cloneB.removeNode(nb);
-							System.out.println("MATCHED: "+ na.getIdentifier()+" - "+nb.getIdentifier());
-						}
-						else {
-							Node variable = Network.buildVariableNode();
-							resultSet.addNode(variable);
-							System.out.println("MAPPED: "+na.getIdentifier() + " - "+nb.getIdentifier() + " to: "+ variable.getIdentifier());
+							continue main;
 						}
 					}
-					if (nb.getSyntacticType().equals("Variable")){
-						resultSet.addNode(nb);
-						System.out.println("PASSED: "+na.getIdentifier() + " - "+nb.getIdentifier() + " to: "+ nb.getIdentifier());
-					}
-					else {
-						resultSet.addNode(Network.buildVariableNode());
-						System.out.println("PASSED: "+na.getIdentifier() + " - "+nb.getIdentifier() + " to: "+ nb.getIdentifier());
+					for (int j = 0; j < cloneB.size(); j++){
+						Node nb = cloneB.getNode(j);
+						if(nb.getSyntacticType().equals("Variable")){
+							System.out.println("PASS: "+nb.getIdentifier()+" -> "+na.getIdentifier());
+							resultSet.addNode(nb);
+						}
+						else{
+							System.out.println("MAP: "+na.getIdentifier()+" - "+nb.getIdentifier());
+							resultSet.addNode(Network.buildVariableNode());
+						}
 					}
 				}
+				else {
+					// na is a molecular node 
+				}
 			}
-			if(na.getSyntacticType().equals("Variable")){
-				resultSet.addNode(na);
-				System.out.println("DIRECT PASS: "+na.getIdentifier());
-			}
-			else {
-				
-				// Recursive call on antiUnify to perform it on two molecular nodes
-	
-			}	
 		}
 		return resultSet;
 	}
@@ -84,8 +81,13 @@ public class AntiUnification {
 		}
 		return res;
 	}
+	
+	
 		
-//	Main method for testing 
+//////////////////////////////////////	
+//	Main method for testing //////////
+//////////////////////////////////////
+	
 	public static void main(String[] args) throws Exception{
 		
 		 Relation member = new Relation("member", "Entity", "reduce", 1);
@@ -141,14 +143,13 @@ public class AntiUnification {
 		 NodeSet set = new NodeSet();
 		 set.addNode(mohamed);
 		 set.addNode(ahmed);
+		 set.addNode(v2);
 		 
 		 NodeSet set1 = new NodeSet();
-//		 set1.addNode(abdeltawab);
+		 set1.addNode(abdeltawab);
 		 set1.addNode(mohamed);
 		 set1.addNode(v1);
-		 		 
-//		 System.out.println(produceNodeSetCombinations(set, set1));
-//		 System.out.println(gMap.toString());
-//		 antiUnify(node, node1);
+
+		 System.out.println(produceNodeSetCombinations(set, set1));
 	}
 }

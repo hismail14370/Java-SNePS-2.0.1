@@ -77,7 +77,10 @@ public class GeneralizationMap {
 		return this.map.toString();
 	}
 	
-//	Main method for testing
+//////////////////////////////////////
+//  Main method for testing //////////
+//////////////////////////////////////
+	
 	public static void main(String[] args) throws CustomException {
 		GeneralizationMap m = new GeneralizationMap();
 		Entity e = new Entity();
