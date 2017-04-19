@@ -14,17 +14,21 @@ import sneps.network.classes.semantic.*;
 
 public class AntiUnification {
 	
-	private static GeneralizationMap gMap = new GeneralizationMap();
+	private GeneralizationMap gMap = new GeneralizationMap();
+	
+	public AntiUnification(){
+		this.gMap = new GeneralizationMap();
+	}
 	
 //  Compares The case frame of two nodes
-	public static boolean antiUnifiable(MolecularNode m, MolecularNode n){
+	public boolean antiUnifiable(MolecularNode m, MolecularNode n){
 		CaseFrame cfM = m.getDownCableSet().getCaseFrame();
 		CaseFrame cfN = n.getDownCableSet().getCaseFrame();
 		return (cfM.equals(cfN));
 	}
 	
 //  Produces a nodeSet with all the antiUnifing results between two nodeSets
-	public static NodeSet produceNodeSetCombinations(NodeSet a, NodeSet b) throws CustomException{
+	public NodeSet produceNodeSetCombinations(NodeSet a, NodeSet b) throws CustomException{
 		NodeSet resultSet = new NodeSet();
 		NodeSet cloneA = new NodeSet();
 		NodeSet cloneB = new NodeSet();
@@ -32,45 +36,21 @@ public class AntiUnification {
 		cloneB.addAll(b);
 		main : for (int i = 0; i < cloneA.size(); i++){
 			Node na = cloneA.getNode(i);
-			if(na.getSyntacticType().equals("Variable")){
-				System.out.println("DIRECT PASS: "+na.getIdentifier());
-				resultSet.addNode(na);
-				continue main;
-			}
-			else{
-				if(na.getSyntacticType().equals("Base")){
-					for (int j = 0; j < cloneB.size(); j++){
-						Node nb = cloneB.getNode(j);
-						System.out.println(na.getIdentifier()+" <-> "+nb.getIdentifier());
-						if(na.getIdentifier().equals(nb.getIdentifier())){
-							System.out.println("MATCH!");
-							resultSet.addNode(na);
-							continue main;
-						}
-					}
-					for (int j = 0; j < cloneB.size(); j++){
-						Node nb = cloneB.getNode(j);
-						if(nb.getSyntacticType().equals("Variable")){
-							System.out.println("PASS: "+nb.getIdentifier()+" -> "+na.getIdentifier());
-							resultSet.addNode(nb);
-						}
-						else{
-							System.out.println("MAP: "+na.getIdentifier()+" - "+nb.getIdentifier());
-//							resultSet.addNode(gMap.recordSubstitution(na, nb));
-						}
-					}
+			for (int j = 0; j < cloneB.size(); j++){
+				Node nb = cloneB.getNode(j);
+				if(na.getIdentifier().equals(nb.getIdentifier())){
+					resultSet.addNode(na);
 				}
 				else {
-					
-					// na is a molecular node .. need advice  
+					resultSet.addNode(this.gMap.getGeneralization(na, nb));
 				}
 			}
 		}
 		return resultSet;
 	}
 	
-	public static MolecularNode antiUnify(MolecularNode m, MolecularNode n) throws Exception{
-		if(!antiUnifiable(m, n)){
+	public MolecularNode antiUnify(MolecularNode m, MolecularNode n) throws Exception{
+		if(!this.antiUnifiable(m, n)){
 			throw new CustomException("Can not anti-unify these two incompatible nodes");
 		}
 		MolecularNode res = null;
@@ -159,12 +139,13 @@ public class AntiUnification {
 		 set.addNode(mohamed);
 		 set.addNode(ahmed);
 		 
-		 System.out.println("attempting nodesets .....");
 		 NodeSet set1 = new NodeSet();
 		 set1.addNode(abdeltawab);
-		 System.out.println(set1);
-
-//		 System.out.println(produceNodeSetCombinations(set, set1));
+		 set1.addNode(v1);
+		 
+		 AntiUnification a1 = new AntiUnification();
+		 
+		 System.out.println(a1.produceNodeSetCombinations(set, set1));
 //		 System.out.println(antiUnify(node1, node2));
 	}
 }
