@@ -56,37 +56,50 @@ public class AntiUnification {
 						}
 						else{
 							System.out.println("MAP: "+na.getIdentifier()+" - "+nb.getIdentifier());
-							resultSet.addNode(Network.buildVariableNode());
+//							resultSet.addNode(gMap.recordSubstitution(na, nb));
 						}
 					}
 				}
 				else {
-					// na is a molecular node 
+					
+					// na is a molecular node .. need advice  
 				}
 			}
 		}
 		return resultSet;
 	}
 	
-	public static MolecularNode antiUnify(MolecularNode m, MolecularNode n) throws CustomException{
+	public static MolecularNode antiUnify(MolecularNode m, MolecularNode n) throws Exception{
 		if(!antiUnifiable(m, n)){
 			throw new CustomException("Can not anti-unify these two incompatible nodes");
 		}
 		MolecularNode res = null;
 		CaseFrame cf = m.getDownCableSet().getCaseFrame();
+		ArrayList<NodeSet> nodeSets = new ArrayList<>();
+		int i = 0;
 		for(String key : m.getDownCableSet().getDownCables().keySet()){
 			NodeSet nodeSetM = m.getDownCableSet().getDownCable(key).getNodeSet();
 			NodeSet nodeSetN = n.getDownCableSet().getDownCable(key).getNodeSet();
 			NodeSet combinationalSet = produceNodeSetCombinations(nodeSetM, nodeSetN);
+			nodeSets.add(combinationalSet);
+			i += combinationalSet.size();
 		}
-		return res;
+		Object [][] relNodes = new Object[i][2];
+		int j = 0;
+		for(String key : m.getDownCableSet().getDownCables().keySet()){
+			NodeSet workingSet = nodeSets.get(j);
+			for (int k = 0; k < workingSet.size(); k++){
+				relNodes[j][0] = m.getDownCableSet().getCaseFrame().getRelations().get(key).getRelation();
+				relNodes[j][1] = workingSet.getNode(k);
+			}
+			j++;
+		}
+		return Network.buildMolecularNode(relNodes, cf);
 	}
 	
 	
 		
-//////////////////////////////////////	
-//	Main method for testing //////////
-//////////////////////////////////////
+//	=========== MAIN METHOD FOR TESTING ============
 	
 	public static void main(String[] args) throws Exception{
 		
@@ -96,8 +109,10 @@ public class AntiUnification {
 		 Entity e = new Entity();
 		 Node mohamed = Network.buildBaseNode("Mohamed", e);
 		 Node ahmed = Network.buildBaseNode("Ahmed", e);
-		 Node student  = Network.buildBaseNode("Student",e);
 		 Node abdeltawab = Network.buildBaseNode("Abdeltawab", e);
+		 Node omar = Network.buildBaseNode("omar", e);
+		 
+		 Node student  = Network.buildBaseNode("Student",e);
 		 
 		 Node v1 = Network.buildVariableNode();
 		 Node v2 = Network.buildVariableNode();
@@ -143,13 +158,13 @@ public class AntiUnification {
 		 NodeSet set = new NodeSet();
 		 set.addNode(mohamed);
 		 set.addNode(ahmed);
-		 set.addNode(v2);
 		 
+		 System.out.println("attempting nodesets .....");
 		 NodeSet set1 = new NodeSet();
 		 set1.addNode(abdeltawab);
-		 set1.addNode(mohamed);
-		 set1.addNode(v1);
+		 System.out.println(set1);
 
-		 System.out.println(produceNodeSetCombinations(set, set1));
+//		 System.out.println(produceNodeSetCombinations(set, set1));
+//		 System.out.println(antiUnify(node1, node2));
 	}
 }
