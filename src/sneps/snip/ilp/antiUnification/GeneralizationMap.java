@@ -103,20 +103,14 @@ public class GeneralizationMap {
 				return variable;
 			}
 			else {
-				if (variableExistsInMap(variable)){
-					this.map.put(base.getIdentifier(), variable);
-					return variable;
-				}
-				else {
-					this.map.put(base.getIdentifier(), variable);
-					return variable;
-				}
+				this.map.put(base.getIdentifier(), variable);
+				return variable;
 			}
 		}
 	}
 	
 	public VariableNode variableVariableGeneralization(VariableNode v1, VariableNode v2){
-		System.out.println("VARIABLE-VARIABLE");
+//		System.out.println("VARIABLE-VARIABLE");
 		if(variableExistsInMap(v1) && variableExistsInMap(v2)){
 			if(this.thetaSubsumes(v1, v2)){
 				return v1;
@@ -170,21 +164,21 @@ public class GeneralizationMap {
 		Node n3 = Network.buildBaseNode("c", e);
 		Node n4 = Network.buildBaseNode("d", e);
 		Node n5 = Network.buildBaseNode("e", e);
-//		System.out.println(m.getGeneralization(n1, n2));
-//		System.out.println(m.getGeneralization(n3, n4));
-//		System.out.println(m.getGeneralization(n1, n3));
-//		System.out.println("____");
-//		VariableNode v = m.getGeneralization(n1, n5);
-//		System.out.println(v);
-//		System.out.println("____");
-//		System.out.println(m.getParentNode(v));
+		System.out.println(m.getGeneralization(n1, n2));
+		System.out.println(m.getGeneralization(n3, n4));
+		System.out.println(m.getGeneralization(n1, n3));
+		System.out.println("____");
+		VariableNode v = m.getGeneralization(n1, n5);
+		System.out.println(v);
+		System.out.println("____");
+		System.out.println(m.getParentNode(v));
 		
-//		System.out.println("____Testing base to variable_____");
-//		VariableNode v1 = Network.buildVariableNode();
-//		System.out.println("VARIABLE: "+v1.getIdentifier());
-//		System.out.println("GENERALIZED TO: "+m.baseVariableGeneralization(n1, v1));
-//		System.out.println(m.baseVariableGeneralization(Network.buildBaseNode("f", e), v));
-//		System.out.println(m.baseVariableGeneralization(Network.buildBaseNode("g", e), Network.buildVariableNode()));
+		System.out.println("____Testing base to variable_____");
+		VariableNode v1 = Network.buildVariableNode();
+		System.out.println("VARIABLE: "+v1.getIdentifier());
+		System.out.println("GENERALIZED TO: "+m.baseVariableGeneralization(n1, v1));
+		System.out.println(m.baseVariableGeneralization(Network.buildBaseNode("f", e), v));
+		System.out.println(m.baseVariableGeneralization(Network.buildBaseNode("g", e), Network.buildVariableNode()));
 		
 //		System.out.println("__ Test theta subsumption __");
 //		VariableNode v1 = m.getGeneralization(n1, n2);

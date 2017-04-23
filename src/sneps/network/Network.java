@@ -633,10 +633,10 @@ public class Network {
 		// create the Molecular Node
 		MolecularNode mNode;
 		if (isToBePattern(array)) {
-			System.out.println("building patt");
+//			System.out.println("building patt");
 			mNode = createPatNode(relNodeSet, caseFrame);
 		}else {
-			System.out.println("building closed");
+//			System.out.println("building closed");
 			mNode = createClosedNode(relNodeSet, caseFrame);
 		}
 		nodes.put(mNode.getIdentifier(), mNode);
@@ -926,7 +926,7 @@ public class Network {
 	@SuppressWarnings("rawtypes")
 	private static MolecularNode createPatNode(Object[][] relNodeSet,
 			CaseFrame caseFrame) throws Exception {
-		System.out.println("mtooo");
+//		System.out.println("mtooo");
 		LinkedList<DownCable> dCables = new LinkedList<DownCable>();
 		for (int i = 0; i < relNodeSet.length; i++) {
 			dCables.add(new DownCable((Relation) relNodeSet[i][0],
@@ -1133,7 +1133,7 @@ public class Network {
 				}
 			}
 		}
-		System.out.println("Not Satisfied");
+//		System.out.println("Not Satisfied");
 		return caseframe.getSemanticClass();
 	}
 
