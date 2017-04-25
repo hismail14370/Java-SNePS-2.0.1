@@ -2,6 +2,7 @@ package sneps.snip.ilp.antiUnification;
 
 import java.util.*;
 
+import nu.xom.Nodes;
 import sneps.network.*;
 import sneps.network.cables.DownCable;
 import sneps.network.cables.DownCableSet;
@@ -16,6 +17,7 @@ import sneps.network.classes.semantic.*;
 public class AntiUnification {
 	
 	private GeneralizationMap gMap = new GeneralizationMap();
+	private HashMap<String, MolecularNode> history = new HashMap<>();
 	
 	public AntiUnification(){
 		this.gMap = new GeneralizationMap();
@@ -49,7 +51,8 @@ public class AntiUnification {
 							resultSet.addNode(antiUnify((MolecularNode) na, (MolecularNode) nb));
 						}
 						catch (Exception e){
-							System.out.println("EXCEPTION: " + e.getMessage());
+							System.out.println(na + " <-> " + nb + " threw exception: ");
+							System.out.println(e.getMessage());
 							continue;
 						}
 					}
@@ -92,9 +95,20 @@ public class AntiUnification {
 				j++;
 			}
 		}
-		res = Network.buildMolecularNode(relNodes, cf);
+		if (Network.getMolecularNode(relNodes) != null){
+			res = Network.getMolecularNode(relNodes);
+		}
+		else {
+			res = Network.buildMolecularNode(relNodes, cf);
+		}
 //		System.out.println(res);
 		return res;
+	}
+	
+	public NodeSet antiUnify(NodeSet set) throws CustomException{
+		NodeSet set1 = new NodeSet();
+		set1.addAll(set);
+		return produceNodeSetCombinations(set, set1);
 	}
 	
 	public void displayGeneralizationMap(){
@@ -174,15 +188,7 @@ public class AntiUnification {
 		 relNodes3 [2][0] = cl;
 		 relNodes3 [2][1] = student;
 		 MolecularNode node3 = Network.buildMolecularNode(relNodes3, cf);
-		 
-//		 Object[][] relNodes4 = new Object[2][2];
-//		 relNodes4[0][0] = agent;
-//		 relNodes4[0][1] = mohamed;
-//		 relNodes4[1][0] = belief;
-//		 relNodes4[1][1] = node3;
-//		 MolecularNode node4 = Network.buildMolecularNode(relNodes4, cf1);
-//		 System.out.println(node4);
-		 
+		 		 
 		 NodeSet set = new NodeSet();
 		 set.addNode(mohamed);
 		 set.addNode(ahmed);
@@ -196,7 +202,11 @@ public class AntiUnification {
 		 
 		 System.out.println("===================");
 		 		
-		 a1.antiUnify(node, node2);
+//		 a1.antiUnify(node, node2);
+		 NodeSet set2 = new NodeSet();
+		 set2.addNode(node);
+		 set2.addNode(node1);
+		 System.out.println(a1.antiUnify(set2));
 		 System.out.println("===================");
 		 System.out.println("Generalization Map: ");
 		 System.out.println(a1.gMap);

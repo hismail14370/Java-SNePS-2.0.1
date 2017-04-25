@@ -147,7 +147,7 @@ public class GeneralizationMap {
 	}
 		
 	public void displayMap(){
-		System.out.println(this.map);
+		System.out.println("Generalization Map: " + this.map);
 	}
 	
 	public String toString(){

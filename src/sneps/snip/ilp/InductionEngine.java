@@ -1,5 +1,6 @@
 package sneps.snip.ilp;
 
+import java.util.Hashtable;
 import java.util.LinkedList;
 
 import sneps.network.CaseFrame;
@@ -13,16 +14,78 @@ import sneps.network.nodes.Node;
 import sneps.network.nodes.NodeSet;
 import sneps.snip.ilp.antiUnification.AntiUnification;
 
-public class InductiveEngine {
+public class InductionEngine {
 	
 	NodeSet positiveEvidence;
 	NodeSet negativeEvidence;
-	NodeSet BackgroundKnowledge;
+	NodeSet backgroundKnowledge;
+	Hashtable<CaseFrame, NodeSet> positiveEvidenceTable;
+	Hashtable<CaseFrame, NodeSet> negativeEvidenceTable;
+	Hashtable<CaseFrame, NodeSet> backgroundKnowledgeTable;
+	AntiUnification antiUnification;
 	
-	public InductiveEngine(){
+	public InductionEngine(){
 		this.positiveEvidence = new NodeSet();
 		this.negativeEvidence = new NodeSet();
-		this.BackgroundKnowledge = new NodeSet();
+		this.backgroundKnowledge = new NodeSet();
+		this.positiveEvidenceTable = new Hashtable<>();
+		this.negativeEvidenceTable = new Hashtable<>();
+		this.backgroundKnowledgeTable = new Hashtable<>();
+		this.antiUnification = new AntiUnification();
+	}
+	
+	public void initializePositiveEvidence(NodeSet set){
+		this.positiveEvidence = set;
+		this.clusterPositiveEvidence();
+	}
+	
+	public void initializeNegativeEvidence(NodeSet set){
+		this.negativeEvidence = set;
+		this.clusterNegativeEvidence();
+	}
+	
+	public void initializeBackgroundKnowledge(NodeSet set){
+		this.backgroundKnowledge = set;
+		this.clusterBackgroundKnowledge();
+	}
+	
+	private void clusterPositiveEvidence(){
+		for (int i = 0; i < this.positiveEvidence.size(); i++){
+			if (this.positiveEvidence.getNode(i) instanceof MolecularNode){
+				MolecularNode n = (MolecularNode) this.positiveEvidence.getNode(i);
+				CaseFrame cf = n.getDownCableSet().getCaseFrame();
+				if(!this.positiveEvidenceTable.containsKey(cf)){
+					this.positiveEvidenceTable.put(cf, new NodeSet());
+				}
+				this.positiveEvidenceTable.get(cf).addNode(n);
+			}
+		}
+	}
+	
+	private void clusterNegativeEvidence(){
+		for (int i = 0; i < this.positiveEvidence.size(); i++){
+			if (this.positiveEvidence.getNode(i) instanceof MolecularNode){
+				MolecularNode n = (MolecularNode) this.positiveEvidence.getNode(i);
+				CaseFrame cf = n.getDownCableSet().getCaseFrame();
+				if(!this.positiveEvidenceTable.containsKey(cf)){
+					this.positiveEvidenceTable.put(cf, new NodeSet());
+				}
+				this.positiveEvidenceTable.get(cf).addNode(n);
+			}
+		}
+	}
+	
+	private void clusterBackgroundKnowledge(){
+		for (int i = 0; i < this.positiveEvidence.size(); i++){
+			if (this.positiveEvidence.getNode(i) instanceof MolecularNode){
+				MolecularNode n = (MolecularNode) this.positiveEvidence.getNode(i);
+				CaseFrame cf = n.getDownCableSet().getCaseFrame();
+				if(!this.positiveEvidenceTable.containsKey(cf)){
+					this.positiveEvidenceTable.put(cf, new NodeSet());
+				}
+				this.positiveEvidenceTable.get(cf).addNode(n);
+			}
+		}
 	}
 	
 //	=========== MAIN METHOD FOR TESTING ============
@@ -46,7 +109,7 @@ public class InductiveEngine {
 		LinkedList<RCFP> propList1 = new LinkedList<>();
 		propList1.add(prop2);
 		propList1.add(prop3);
-		CaseFrame lovesCaseFrame = Network.defineCaseFrame("Individual", propList1);
+		CaseFrame lovesCaseFrame = Network.defineCaseFrame("Proposition", propList1);
 		
 		Entity ent = new Entity();
 		Node a = Network.buildBaseNode("a", ent);
@@ -90,7 +153,6 @@ public class InductiveEngine {
 		relNodes5[1][0] = love;
 		relNodes5[1][1] = node1;
 		MolecularNode node5 = Network.buildMolecularNode(relNodes5, lovesCaseFrame);
-		System.out.println(node5);
 		
 		Object[][] relNodes6 = new Object[2][2];
 		relNodes6[0][0] = agent;
@@ -99,16 +161,20 @@ public class InductiveEngine {
 		relNodes6[1][1] = node3;
 		MolecularNode node6 = Network.buildMolecularNode(relNodes6, lovesCaseFrame);
 		
-//		======================= Anti-unification ========================
+		InductionEngine in = new InductionEngine();
+		NodeSet set = new NodeSet();
+		set.addNode(node);
+		set.addNode(node1);
+		set.addNode(node2);
+		set.addNode(node3);
+		set.addNode(node5);
+		set.addNode(node6);
 		
-		AntiUnification ant = new AntiUnification();
-		MolecularNode p1 = ant.antiUnify(node, node1);
-		MolecularNode p2 = ant.antiUnify(node2, node3);
-		MolecularNode p3 = ant.antiUnify(node5, node6);
-		System.out.println(p1);
-		System.out.println(p2);
-		System.out.println(p3);
-		ant.displayGeneralizationMap();
+		in.initializePositiveEvidence(set);
+		System.out.println("===");
+		System.out.println(in.positiveEvidence);
+		System.out.println(in.positiveEvidenceTable);
+		in.antiUnification.displayGeneralizationMap();
 	}
 	
 }
