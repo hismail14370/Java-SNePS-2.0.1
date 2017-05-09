@@ -83,6 +83,18 @@ public class GeneralizationMap {
 		return v1;
 	}
 	
+	public VariableNode renameVariables(VariableNode v1, VariableNode v2){
+		if (existsInMap(v1, v2)){
+			return getVariableFromMap(v1, v2);
+		}
+		if (existsInMap(v2, v1)){
+			return getVariableFromMap(v2, v1);
+		}
+		VariableNode res = Network.buildVariableNode();
+		this.map.put(v1.getIdentifier() + " - " + v2.getIdentifier(), res);
+		return res;
+	}
+	
 	public void displayMap(){
 		System.out.println("Generalization Map: " + this.map);
 	}

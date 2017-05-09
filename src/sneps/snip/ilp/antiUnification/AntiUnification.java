@@ -32,8 +32,9 @@ public class AntiUnification {
 	}
 	
 //  Produces a nodeSet with all the antiUnifing results between two nodeSets
-	public NodeSet produceNodeSetCombinations(NodeSet a, NodeSet b) throws CustomException{
+	public SetAntiUnifier produceNodeSetCombinations(NodeSet a, NodeSet b, String relationName) throws CustomException{
 		NodeSet resultSet = new NodeSet();
+		SetAntiUnifier result = new SetAntiUnifier(relationName);
 		NodeSet cloneA = new NodeSet();
 		NodeSet cloneB = new NodeSet();
 		cloneA.addAll(a);
@@ -43,13 +44,16 @@ public class AntiUnification {
 			for (int j = 0; j < cloneB.size(); j++){
 				Node nb = cloneB.getNode(j);
 				if(na.getIdentifier().equals(nb.getIdentifier())){
+					result.addConstant(na);
 					resultSet.addNode(na);
 				}
 				else {
 					if ((na instanceof MolecularNode) && (nb instanceof MolecularNode) && 
 							(antiUnifiable((MolecularNode) na, (MolecularNode) nb))){
 						try {
-							resultSet.addNode(antiUnify((MolecularNode) na, (MolecularNode) nb));
+							SingularAntiUnifier ant = antiUnify((MolecularNode) na, (MolecularNode) nb);
+							result.addMolecular(ant);
+							resultSet.addNode(ant.antiUnifierNode);
 						}
 						catch (Exception e){
 							System.out.println(na + " <-> " + nb + " threw exception: ");
@@ -58,18 +62,22 @@ public class AntiUnification {
 						}
 					}
 					else {
+						VariableNode variable = this.gMap.getGeneralization(na, nb);
 						resultSet.addNode(this.gMap.getGeneralization(na, nb));
+						result.addVariable(variable, na, nb);
 					}
 				}
 			}
 		}
-		return resultSet;
+		System.out.println(result);
+		return result;
 	}
 	
-	public MolecularNode antiUnify(MolecularNode m, MolecularNode n) throws Exception{
+	public SingularAntiUnifier antiUnify(MolecularNode m, MolecularNode n) throws Exception{
 		if(!this.antiUnifiable(m, n)){
 			throw new CustomException("Can not anti-unify these two incompatible nodes");
 		}
+		ArrayList<SetAntiUnifier> setAntiUnifierList = new ArrayList<>();
 		MolecularNode res = null;
 		CaseFrame cf = m.getDownCableSet().getCaseFrame();
 		Hashtable<Relation, NodeSet> relNodesTable = new Hashtable<>();
@@ -78,7 +86,9 @@ public class AntiUnification {
 			Relation r = rcfp.getRelation();
 			NodeSet setm = m.getDownCableSet().getDownCable(r.getName()).getNodeSet();
 			NodeSet setn = n.getDownCableSet().getDownCable(r.getName()).getNodeSet();
-			NodeSet resultSet = produceNodeSetCombinations(setm, setn);
+			SetAntiUnifier setAntiUnifier = produceNodeSetCombinations(setm, setn, r.toString());
+			setAntiUnifierList.add(setAntiUnifier);
+			NodeSet resultSet = setAntiUnifier.getNodes();
 			relNodesTable.put(r, resultSet);
 			numberOfNodes += resultSet.size();
 		}
@@ -101,32 +111,31 @@ public class AntiUnification {
 			res = Network.buildMolecularNode(relNodes, cf);
 		}
 		System.out.println("Anti-unifying: " + m + " <---> " + n + "  To: " + res);
-		return res;
+		SingularAntiUnifier antiUnifier = new SingularAntiUnifier(res, setAntiUnifierList);
+//		System.out.println(antiUnifier);
+		return antiUnifier;
 	}
 	
-	public MolecularNode antiUnify(NodeSet set) throws Exception{
-//		NodeSet set1 = new NodeSet();
-//		set1.addAll(set);
-//		NodeSet result = produceNodeSetCombinations(set, set1);
-//		for (int i = 0; i < set.size(); i++){
-//			if(result.contains(set.getNode(i))){
-//				result.removeNode(set.getNode(i));
-//			}
-//		}
-//		return result;
+	public SingularAntiUnifier antiUnify(NodeSet set) throws Exception{
 		MolecularNode m = (MolecularNode) set.getNode(0);
+		SingularAntiUnifier res = new SingularAntiUnifier(null, new ArrayList<>());
+		for (String r : m.getDownCableSet().getCaseFrame().getRelations().keySet()){
+			res.setAntiUnifiers.add(new SetAntiUnifier(r));
+		}
 		for (int i = 0; i < set.size() - 1; i++){
 			MolecularNode n = (MolecularNode) set.getNode(i+1);
 			if (this.antiUnifiable(m, n)){
 				System.out.println(m + " <---> " + n);
-				m = this.antiUnify(m, n);
+				SingularAntiUnifier temp = this.antiUnify(m, n);
+				m = temp.antiUnifierNode;
+				res.combine(temp);
+//				m = this.antiUnify(m, n).node;
 			}
 		}
-		return m;
+		return res;
 	}
 	
 	public void displayGeneralizationMap(){
-//		this.gTree.displayMap();
 		this.gMap.displayMap();
 	}
 		

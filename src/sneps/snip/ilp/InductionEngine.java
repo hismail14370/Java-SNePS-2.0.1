@@ -16,6 +16,7 @@ import sneps.network.nodes.Node;
 import sneps.network.nodes.NodeSet;
 import sneps.network.nodes.PatternNode;
 import sneps.snip.ilp.antiUnification.AntiUnification;
+import sneps.snip.ilp.antiUnification.SingularAntiUnifier;
 
 public class InductionEngine {
 	
@@ -90,13 +91,6 @@ public class InductionEngine {
 					this.negativeEvidenceTable.put(cf.toString(), new NodeSet());
 				}
 				this.negativeEvidenceTable.get(cf.toString()).addNode(n);
-//				Hashtable<String, NodeSet> table = getAllSubInstances(n);
-//				for (String s1 : table.keySet()){
-//					if (this.negativeEvidenceTable.get(s1) == null){
-//						this.negativeEvidenceTable.put(s1, new NodeSet());
-//					}
-//					this.negativeEvidenceTable.get(s1).addAll(table.get(s1));
-//				}
 			}
 		}
 	}
@@ -110,13 +104,6 @@ public class InductionEngine {
 					this.backgroundKnowledgeTable.put(cf.toString(), new NodeSet());
 				}
 				this.backgroundKnowledgeTable.get(cf.toString()).addNode(n);
-//				Hashtable<String, NodeSet> table = getAllSubInstances(n);
-//				for (String s1 : table.keySet()){
-//					if (this.backgroundKnowledgeTable.get(s1) == null){
-//						this.backgroundKnowledgeTable.put(s1, new NodeSet());
-//					}
-//					this.backgroundKnowledgeTable.get(s1).addAll(table.get(s1));
-//				}
 			}
 		}
 	}
@@ -208,7 +195,6 @@ public class InductionEngine {
 				}
 			}
 		}
-//		System.out.println(result);
 		return result;
 	}
 	
@@ -216,12 +202,16 @@ public class InductionEngine {
 		
 		NodeSet bgNodeSet = this.backgroundKnowledgeTable.get(bgCaseFrame.toString());
 		NodeSet posNodeSet = this.positiveEvidenceTable.get(posCaseFrame.toString());
-		MolecularNode antiUnifiedBg = this.antiUnification.antiUnify(bgNodeSet);
+		SingularAntiUnifier antiUnifiedBg = this.antiUnification.antiUnify(bgNodeSet);
 		System.out.println(antiUnifiedBg);
-		MolecularNode antiUnifiedPosEv = this.antiUnification.antiUnify(posNodeSet);
+		SingularAntiUnifier antiUnifiedPosEv = this.antiUnification.antiUnify(posNodeSet);
 		System.out.println(antiUnifiedPosEv);
+		System.out.println("Consistent????");
+		boolean b = antiUnifiedPosEv.consistent(antiUnifiedBg);
+		System.out.println(b);
 		
-		// test for common variables.. anti-unifier data structure.. in progress
+		// test for common variables.. anti-unifier data structure.. Done
+		
 		// Save in candidate hypothesis.. will we?
 		// test regarding negative evidence
 		// if test with negative evidence fails, specialize.. cluster by a common relation or conjuctions
@@ -289,7 +279,7 @@ public class InductionEngine {
 		relNodes8[0][0] = member;
 		relNodes8[0][1] = e;
 		relNodes8[1][0] = cl;
-		relNodes8[1][1] = robot;
+		relNodes8[1][1] = person;
 		MolecularNode node8 = Network.buildMolecularNode(relNodes8, memberClassCaseFrame);
 		
 		Object[][] relNodes2 = new Object[2][2];
@@ -305,6 +295,13 @@ public class InductionEngine {
 		relNodes3[1][0] = property;
 		relNodes3[1][1] = mortal;
 		MolecularNode node3 = Network.buildMolecularNode(relNodes3, objectPropertyCaseFrame);
+		
+		Object[][] relNodes9 = new Object[2][2];
+		relNodes9[0][0] = object;
+		relNodes9[0][1] = e;
+		relNodes9[1][0] = property;
+		relNodes9[1][1] = mortal;
+		MolecularNode node9 = Network.buildMolecularNode(relNodes9, objectPropertyCaseFrame);
 	
 		Object[][] relNodes5 = new Object[2][2];
 		relNodes5[0][0] = agent;
@@ -331,11 +328,13 @@ public class InductionEngine {
 		NodeSet posEv = new NodeSet();
 		posEv.addNode(node2);
 		posEv.addNode(node3);
+		posEv.addNode(node9);
 		in.initializePositiveEvidence(posEv);
 		
 		NodeSet bgKnow = new NodeSet();
 		bgKnow.addNode(node);
 		bgKnow.addNode(node1);
+		bgKnow.addNode(node8);
 		in.initializeBackgroundKnowledge(bgKnow);
 		
 		in.induceEntailment(memberClassCaseFrame, objectPropertyCaseFrame);
