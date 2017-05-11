@@ -11,8 +11,8 @@ import sneps.network.nodes.VariableNode;
 
 public class SingularAntiUnifier{
 	
-	MolecularNode antiUnifierNode;
-	ArrayList<SetAntiUnifier> setAntiUnifiers;
+	public MolecularNode antiUnifierNode;
+	public ArrayList<SetAntiUnifier> setAntiUnifiers;
 	
 	public SingularAntiUnifier(MolecularNode node, ArrayList<SetAntiUnifier> setAntiUnifiers){
 		this.antiUnifierNode = node;
@@ -54,6 +54,9 @@ public class SingularAntiUnifier{
 						continue outer;
 					}
 				}
+				System.out.println("CONSISTENCY ON: ");
+				System.out.println(this.setAntiUnifiers.get(i));
+				System.out.println(ant.setAntiUnifiers.get(j));
 				return true;
 			}
 		}

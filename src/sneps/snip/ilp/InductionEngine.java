@@ -17,6 +17,7 @@ import sneps.network.nodes.NodeSet;
 import sneps.network.nodes.PatternNode;
 import sneps.snip.ilp.antiUnification.AntiUnification;
 import sneps.snip.ilp.antiUnification.SingularAntiUnifier;
+import sneps.snip.ilp.rules.AndEntailment;
 
 public class InductionEngine {
 	
@@ -27,6 +28,7 @@ public class InductionEngine {
 	Hashtable<String, NodeSet> negativeEvidenceTable;
 	Hashtable<String, NodeSet> backgroundKnowledgeTable;
 	AntiUnification antiUnification;
+	HashSet<AndEntailment> andEntailments;
 	
 	public InductionEngine(){
 		this.positiveEvidence = new NodeSet();
@@ -36,6 +38,7 @@ public class InductionEngine {
 		this.negativeEvidenceTable = new Hashtable<>();
 		this.backgroundKnowledgeTable = new Hashtable<>();
 		this.antiUnification = new AntiUnification();
+		this.andEntailments = new HashSet<>();
 	}
 	
 	public InductionEngine(NodeSet positiveEvidence, NodeSet negativeEvidence, NodeSet backgroundKnowledge){
@@ -71,13 +74,6 @@ public class InductionEngine {
 					this.positiveEvidenceTable.put(cf.toString(), new NodeSet());
 				}
 				this.positiveEvidenceTable.get(cf.toString()).addNode(n);
-//				Hashtable<String, NodeSet> table = getAllSubInstances(n);
-//				for (String s1 : table.keySet()){
-//					if (this.positiveEvidenceTable.get(s1) == null){
-//						this.positiveEvidenceTable.put(s1, new NodeSet());
-//					}
-//					this.positiveEvidenceTable.get(s1).addAll(table.get(s1));
-//				}
 			}
 		}
 	}
@@ -206,12 +202,16 @@ public class InductionEngine {
 		System.out.println(antiUnifiedBg);
 		SingularAntiUnifier antiUnifiedPosEv = this.antiUnification.antiUnify(posNodeSet);
 		System.out.println(antiUnifiedPosEv);
-		System.out.println("Consistent????");
+		
 		boolean b = antiUnifiedPosEv.consistent(antiUnifiedBg);
-		System.out.println(b);
+		if(b){
+			AndEntailment andEnt = new AndEntailment();
+			andEnt.antecedents.add(antiUnifiedBg);
+			andEnt.consequents.add(antiUnifiedPosEv);
+			this.andEntailments.add(andEnt);
+		}
 		
-		// test for common variables.. anti-unifier data structure.. Done
-		
+		System.out.println(this.andEntailments);
 		// Save in candidate hypothesis.. will we?
 		// test regarding negative evidence
 		// if test with negative evidence fails, specialize.. cluster by a common relation or conjuctions
