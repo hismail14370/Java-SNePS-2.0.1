@@ -13,7 +13,7 @@ public class SetAntiUnifier{
 	NodeSet constants;
 	HashSet<SingularAntiUnifier> moleculars;
 	Hashtable<VariableNode, NodeSet> instances;
-	String relationName;
+	public String relationName;
 	
 	public SetAntiUnifier(String relationName){
 		this.relationName = relationName;

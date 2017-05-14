@@ -16,8 +16,10 @@ import sneps.network.nodes.Node;
 import sneps.network.nodes.NodeSet;
 import sneps.network.nodes.PatternNode;
 import sneps.snip.ilp.antiUnification.AntiUnification;
+import sneps.snip.ilp.antiUnification.SetAntiUnifier;
 import sneps.snip.ilp.antiUnification.SingularAntiUnifier;
 import sneps.snip.ilp.rules.AndEntailment;
+import sneps.snip.ilp.rules.OrEntailment;
 
 public class InductionEngine {
 	
@@ -29,6 +31,7 @@ public class InductionEngine {
 	Hashtable<String, NodeSet> backgroundKnowledgeTable;
 	AntiUnification antiUnification;
 	HashSet<AndEntailment> andEntailments;
+	HashSet<OrEntailment> orEntailments;
 	
 	public InductionEngine(){
 		this.positiveEvidence = new NodeSet();
@@ -39,6 +42,7 @@ public class InductionEngine {
 		this.backgroundKnowledgeTable = new Hashtable<>();
 		this.antiUnification = new AntiUnification();
 		this.andEntailments = new HashSet<>();
+		this.orEntailments = new HashSet<>();
 	}
 	
 	public InductionEngine(NodeSet positiveEvidence, NodeSet negativeEvidence, NodeSet backgroundKnowledge){
@@ -104,42 +108,27 @@ public class InductionEngine {
 		}
 	}
 	
-	public HashSet<CaseFrame> getCommonCaseFrames(MolecularNode m, MolecularNode n){
-		HashSet<CaseFrame> result = new HashSet<>();
-		if (m.getDownCableSet().getCaseFrame().equals(n.getDownCableSet().getCaseFrame())){
-			result.add(m.getDownCableSet().getCaseFrame());
-		}
-		for (String r : n.getDownCableSet().getDownCables().keySet()){
-			NodeSet set = n.getDownCableSet().getDownCable(r).getNodeSet();
-			for (int i = 0; i < set.size(); i++){
-				if (set.getNode(i) instanceof MolecularNode){
-					result.addAll(getCommonCaseFrames(m, (MolecularNode)set.getNode(i)));
-				}
-			}
-		}
-		for (String r : m.getDownCableSet().getDownCables().keySet()){
-			NodeSet set = m.getDownCableSet().getDownCable(r).getNodeSet();
-			for (int i = 0; i < set.size(); i++){
-				if (set.getNode(i) instanceof MolecularNode){
-					result.addAll(getCommonCaseFrames(n, (MolecularNode)set.getNode(i)));
-				}
-			}
-		}
-		return result;
-	}
-	
 	public void addToPositiveEvidence(MolecularNode n){
 		this.positiveEvidence.addNode(n);
+		if (this.positiveEvidenceTable.get(n.getDownCableSet().getCaseFrame().toString()) == null){
+			this.positiveEvidenceTable.put(n.getDownCableSet().getCaseFrame().toString(), new NodeSet());
+		}
 		this.positiveEvidenceTable.get(n.getDownCableSet().getCaseFrame().toString()).addNode(n);
 	}
 	
 	public void addToNegativeEvidence(MolecularNode n){
 		this.negativeEvidence.addNode(n);
+		if (this.negativeEvidenceTable.get(n.getDownCableSet().getCaseFrame().toString()) == null){
+			this.negativeEvidenceTable.put(n.getDownCableSet().getCaseFrame().toString(), new NodeSet());
+		}
 		this.negativeEvidenceTable.get(n.getDownCableSet().getCaseFrame().toString()).addNode(n);
 	}
 	
 	public void addToBackgroundKnowledge(MolecularNode n){
 		this.backgroundKnowledge.addNode(n);
+		if (this.backgroundKnowledgeTable.get(n.getDownCableSet().getCaseFrame().toString()) == null){
+			this.backgroundKnowledgeTable.put(n.getDownCableSet().getCaseFrame().toString(), new NodeSet());
+		}
 		this.backgroundKnowledgeTable.get(n.getDownCableSet().getCaseFrame().toString()).addNode(n);
 	}
 	
@@ -194,34 +183,121 @@ public class InductionEngine {
 		return result;
 	}
 	
-	public void induceEntailment(CaseFrame bgCaseFrame, CaseFrame posCaseFrame) throws Exception{
-		
-		NodeSet bgNodeSet = this.backgroundKnowledgeTable.get(bgCaseFrame.toString());
-		NodeSet posNodeSet = this.positiveEvidenceTable.get(posCaseFrame.toString());
+	public void induceAndEntailments() throws Exception{
+		for (String bgcf : this.backgroundKnowledgeTable.keySet()){
+			for (String poscf : this.positiveEvidenceTable.keySet()){
+				induceAndEntailment(bgcf, poscf);
+				System.out.println("AndEntailments: " + this.andEntailments);
+			}
+		}
+	}
+	
+	public void specializeByConjuctions(){
+		for (AndEntailment a : this.andEntailments){
+			for (AndEntailment b : this.andEntailments){
+				if (a.equals(b)) continue;
+				if (a.combinableAntecedents(b)){
+					AndEntailment res = new AndEntailment();
+					res.antecedents.addAll(a.antecedents);
+					res.antecedents.addAll(b.antecedents);
+					res.consequents.addAll(a.consequents);
+					this.andEntailments.remove(a);
+					this.andEntailments.remove(b);
+					this.andEntailments.add(res);
+				}
+			}
+		}
+	}
+	
+	public NodeSet specializeByCommonRelation(NodeSet set, String relationName, Node value){
+		NodeSet resultSet = new NodeSet();
+		for (int i = 0; i < set.size(); i++){
+			MolecularNode m = (MolecularNode) set.getNode(i);
+			NodeSet innerSet = m.getDownCableSet().getDownCable(relationName).getNodeSet();
+			if (innerSet.contains(value)){
+				resultSet.addNode(m);
+			}
+		}
+		return resultSet;
+	}
+	
+	public Hashtable<Pair<String, Node>, NodeSet> getSpecialSets(NodeSet set) throws Exception{
+		Hashtable<Pair<String, Node>, NodeSet> res = new Hashtable<>();
+		SingularAntiUnifier antiUnifier = this.antiUnification.antiUnify(set);
+		for (int i = 0; i < antiUnifier.setAntiUnifiers.size(); i++){
+			SetAntiUnifier setAntiUnifier = antiUnifier.setAntiUnifiers.get(i);
+			for (int j = 0; j < setAntiUnifier.getGroundInstances().size(); j++){
+				Node value = setAntiUnifier.getGroundInstances().getNode(j);
+				NodeSet specialSet = this.specializeByCommonRelation(set, setAntiUnifier.relationName, value);
+				if (specialSet.size() > 1){
+					res.put(new Pair<String, Node>(setAntiUnifier.relationName, value), specialSet);
+				}
+			}
+		}
+		return res;
+	}
+	
+	public void induceOrEntailments(){
+		for (AndEntailment a : this.andEntailments){
+			for (AndEntailment b : this.andEntailments){
+				if (a.equals(b)) continue;
+				if (a.combinableAntecedents(b)){
+					OrEntailment o = new OrEntailment();
+					o.antecedents.add(a);
+					o.antecedents.add(b);
+					o.consequents.addAll(a.consequents);
+					this.orEntailments.add(o);
+				}
+			}
+		}
+		System.out.println("Or Entailments: " + this.orEntailments);
+	}
+	
+	public void induceAndEntailment(String bgCaseFrame, String posCaseFrame) throws Exception{
+		NodeSet bgNodeSet = this.backgroundKnowledgeTable.get(bgCaseFrame);
+		NodeSet posNodeSet = this.positiveEvidenceTable.get(posCaseFrame);
 		SingularAntiUnifier antiUnifiedBg = this.antiUnification.antiUnify(bgNodeSet);
 		System.out.println(antiUnifiedBg);
 		SingularAntiUnifier antiUnifiedPosEv = this.antiUnification.antiUnify(posNodeSet);
 		System.out.println(antiUnifiedPosEv);
 		
-		boolean b = antiUnifiedPosEv.consistent(antiUnifiedBg);
-		if(b){
+		HashSet<Pair<SetAntiUnifier, SetAntiUnifier>> consistencies = antiUnifiedPosEv.getConsistentPairs(antiUnifiedBg);
+		System.out.println("Consistent? " + (consistencies.size() != 0));
+		if(consistencies.size() != 0){
+			System.out.println("On: " + consistencies);
 			AndEntailment andEnt = new AndEntailment();
 			andEnt.antecedents.add(antiUnifiedBg);
 			andEnt.consequents.add(antiUnifiedPosEv);
 			this.andEntailments.add(andEnt);
 		}
-		
-		System.out.println(this.andEntailments);
-		// Save in candidate hypothesis.. will we?
+				
 		// test regarding negative evidence
-		// if test with negative evidence fails, specialize.. cluster by a common relation or conjuctions
-		// eventually, save to candidate hypotheses
 		
+	}
+	
+	public void induceAndEntailment(NodeSet bg, NodeSet posEv) throws Exception{
+		SingularAntiUnifier antiUnifiedBg = this.antiUnification.antiUnify(bg);
+		System.out.println(antiUnifiedBg);
+		SingularAntiUnifier antiUnifiedPosEv = this.antiUnification.antiUnify(posEv);
+		System.out.println(antiUnifiedPosEv);
+		
+		HashSet<Pair<SetAntiUnifier, SetAntiUnifier>> consistencies = antiUnifiedPosEv.getConsistentPairs(antiUnifiedBg);
+		System.out.println("Consistent? " + (consistencies.size() != 0));
+		if(consistencies.size() != 0){
+			System.out.println("On: " + consistencies);
+			AndEntailment andEnt = new AndEntailment();
+			andEnt.antecedents.add(antiUnifiedBg);
+			andEnt.consequents.add(antiUnifiedPosEv);
+			this.andEntailments.add(andEnt);
+		}
+		// test regarding negative evidence
 	}
 	
 //	=========== MAIN METHOD FOR TESTING ============
 	
 	public static void main(String[] args) throws Exception {
+		
+		Network.defineDefaults();
 		
 		Relation member = Network.defineRelation("member", "Entity", "none", 1);
 		Relation cl = Network.defineRelation("class", "Entity", "none", 1);
@@ -235,14 +311,14 @@ public class InductionEngine {
 		LinkedList<RCFP> propList = new LinkedList<>();
 		propList.add(prop);
 		propList.add(prop1);
-		CaseFrame memberClassCaseFrame = Network.defineCaseFrame("Individual", propList);
+		CaseFrame memberClassCaseFrame = Network.defineCaseFrame("Proposition", propList);
 		
 		RCFP prop2 = Network.defineRelationPropertiesForCF(object, "none", 1);
 		RCFP prop3 = Network.defineRelationPropertiesForCF(property, "none", 1);
 		LinkedList<RCFP> propList1 = new LinkedList<>();
 		propList1.add(prop2);
 		propList1.add(prop3);
-		CaseFrame objectPropertyCaseFrame = Network.defineCaseFrame("Individual", propList1);
+		CaseFrame objectPropertyCaseFrame = Network.defineCaseFrame("Proposition", propList1);
 		
 		RCFP prop4 = Network.defineRelationPropertiesForCF(agent, "none", 1);
 		RCFP prop5 = Network.defineRelationPropertiesForCF(love, "none", 1);
@@ -259,6 +335,7 @@ public class InductionEngine {
 		Node e = Network.buildBaseNode("e", ent);
 		Node person = Network.buildBaseNode("person", ent);
 		Node robot = Network.buildBaseNode("robot", ent);
+		Node animal = Network.buildBaseNode("animal", ent);
 		Node mortal = Network.buildBaseNode("mortal", ent);
 		
 		Object[][] relNodes = new Object[2][2];
@@ -267,7 +344,7 @@ public class InductionEngine {
 		relNodes[1][0] = cl;
 		relNodes[1][1] = person;
 		MolecularNode node = Network.buildMolecularNode(relNodes, memberClassCaseFrame);
-		
+
 		Object[][] relNodes1 = new Object[2][2];
 		relNodes1[0][0] = member;
 		relNodes1[0][1] = b;
@@ -279,7 +356,7 @@ public class InductionEngine {
 		relNodes8[0][0] = member;
 		relNodes8[0][1] = e;
 		relNodes8[1][0] = cl;
-		relNodes8[1][1] = person;
+		relNodes8[1][1] = robot;
 		MolecularNode node8 = Network.buildMolecularNode(relNodes8, memberClassCaseFrame);
 		
 		Object[][] relNodes2 = new Object[2][2];
@@ -324,20 +401,53 @@ public class InductionEngine {
 		relNodes7[1][1] = node2;
 		MolecularNode node7 = Network.buildMolecularNode(relNodes7, lovesCaseFrame);
 		
+		Object[][] relNodes10 = new Object[2][2];
+		relNodes10[0][0] = member;
+		relNodes10[0][1] = c;
+		relNodes10[1][0] = cl;
+		relNodes10[1][1] = animal;
+		MolecularNode node10 = Network.buildMolecularNode(relNodes10, memberClassCaseFrame);
+		
+		Object[][] relNodes11 = new Object[2][2];
+		relNodes11[0][0] = member;
+		relNodes11[0][1] = d;
+		relNodes11[1][0] = cl;
+		relNodes11[1][1] = animal;
+		MolecularNode node11 = Network.buildMolecularNode(relNodes11, memberClassCaseFrame);
+		
+		Object[][] relNodes12 = new Object[2][2];
+		relNodes12[0][0] = object;
+		relNodes12[0][1] = c;
+		relNodes12[1][0] = property;
+		relNodes12[1][1] = mortal;
+		MolecularNode node12 = Network.buildMolecularNode(relNodes12, objectPropertyCaseFrame);
+		
+		Object[][] relNodes13 = new Object[2][2];
+		relNodes13[0][0] = object;
+		relNodes13[0][1] = d;
+		relNodes13[1][0] = property;
+		relNodes13[1][1] = mortal;
+		MolecularNode node13 = Network.buildMolecularNode(relNodes13, objectPropertyCaseFrame);
+		
 		InductionEngine in = new InductionEngine();
 		NodeSet posEv = new NodeSet();
-		posEv.addNode(node2);
 		posEv.addNode(node3);
-		posEv.addNode(node9);
+		posEv.addNode(node2);
+		posEv.addNode(node12);
+		posEv.addNode(node13);
 		in.initializePositiveEvidence(posEv);
 		
 		NodeSet bgKnow = new NodeSet();
 		bgKnow.addNode(node);
 		bgKnow.addNode(node1);
-		bgKnow.addNode(node8);
+		bgKnow.addNode(node10);
+		bgKnow.addNode(node11);
+		System.out.println(in.getSpecialSets(bgKnow));
+		System.out.println("++");
 		in.initializeBackgroundKnowledge(bgKnow);
-		
-		in.induceEntailment(memberClassCaseFrame, objectPropertyCaseFrame);
+				
+		in.induceAndEntailments();
+		in.induceOrEntailments();
 		
 		System.out.println("\n\n====================================");
 		System.out.println("Positive Evidence:");

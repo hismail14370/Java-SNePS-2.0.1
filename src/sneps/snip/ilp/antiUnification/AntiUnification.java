@@ -122,6 +122,9 @@ public class AntiUnification {
 		for (String r : m.getDownCableSet().getCaseFrame().getRelations().keySet()){
 			res.setAntiUnifiers.add(new SetAntiUnifier(r));
 		}
+		if (set.size() == 1){
+			res.antiUnifierNode = (MolecularNode) set.getNode(0);
+		}
 		for (int i = 0; i < set.size() - 1; i++){
 			MolecularNode n = (MolecularNode) set.getNode(i+1);
 			if (this.antiUnifiable(m, n)){
